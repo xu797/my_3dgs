@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3DGS对比滑动组件</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+ 
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .comparison-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            background: #000;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+        }
+ 
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            height: 0; 
+            padding-bottom: 56.25%;
+        }
+ 
+        .comparison-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+        }
+ 
+        .twenty-before {
+            clip: rect(0px, 50%, 100%, 0px);
+            z-index: 2;
+        }
+ 
+        .twenty-after {
+            clip: rect(0px, 100%, 100%, 50%);
+        }
+ 
+        .twenty-handle {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: white;
+            cursor: ew-resize;
+            z-index: 3;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+ 
+        .twenty-handle::before {
+            content: "";
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="comparison-container" id="comparison-container">
+        <div class="image-wrapper" id="image-wrapper">
+            <!-- 替换为：原始输入图 -->
+            <img class="comparison-image twenty-before" id="before-image" src="data/ggbond/images/input_0001.jpg" alt="原始图像">
+            <!-- 替换为：3DGS新视角渲染图（比如input_0050对应的渲染图） -->
+            <img class="comparison-image twenty-after" id="after-image" src="data/ggbond/output/train/ours_30000/renders/00050.png" alt="3DGS新视角渲染">
+            <div class="twenty-handle" id="handle"></div>
+        </div>
+    </div>
+ 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('image-wrapper');
+            const beforeImg = document.getElementById('before-image');
+            const afterImg = document.getElementById('after-image');
+            const handle = document.getElementById('handle');
+            
+            let isDragging = false;
+ 
+            function initComponent() {
+                // 修复：同时适配两张图的比例
+                setContainerAspectRatio(beforeImg);
+                setContainerAspectRatio(afterImg);
+                initSlider();
+            }
+ 
+            function setContainerAspectRatio(image) {
+                const imgWidth = image.naturalWidth;
+                const imgHeight = image.naturalHeight;
+                const aspectRatio = imgHeight / imgWidth;
+                container.style.paddingBottom = (aspectRatio * 100) + "%";
+            }
+ 
+            function initSlider() {
+                const containerWidth = container.offsetWidth;
+                const position = containerWidth / 2;
+                updateClip(position);
+                handle.style.left = position + 'px';
+            }
+ 
+            function updateClip(pos) {
+                const containerHeight = container.offsetHeight;
+                beforeImg.style.clip = `rect(0px, ${pos}px, ${containerHeight}px, 0px)`;
+                afterImg.style.clip = `rect(0px, ${container.offsetWidth}px, ${containerHeight}px, ${pos}px)`;
+            }
+ 
+            handle.addEventListener('mousedown', startDrag);
+            handle.addEventListener('touchstart', startDrag);
+ 
+            container.addEventListener('click', function(e) {
+                if (isDragging) return;
+                const rect = container.getBoundingClientRect();
+                const position = e.clientX - rect.left;
+                updateClip(position);
+                handle.style.left = position + 'px';
+            });
+ 
+            function startDrag(e) {
+                e.preventDefault();
+                isDragging = true;
+                const startX = e.clientX || e.touches[0].clientX;
+                const startLeft = parseFloat(handle.style.left);
+ 
+                function onDrag(e) {
+                    const currentX = e.clientX || e.touches[0].clientX;
+                    const rect = container.getBoundingClientRect();
+                    let newPosition = startLeft + (currentX - startX);
+                    newPosition = Math.max(0, Math.min(newPosition, container.offsetWidth));
+                    updateClip(newPosition);
+                    handle.style.left = newPosition + 'px';
+                }
+ 
+                function stopDrag() {
+                    document.removeEventListener('mousemove', onDrag);
+                    document.removeEventListener('mouseup', stopDrag);
+                    document.removeEventListener('touchmove', onDrag);
+                    document.removeEventListener('touchend', stopDrag);
+                    isDragging = false;
+                }
+ 
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchmove', onDrag, { passive: false });
+                document.addEventListener('touchend', stopDrag);
+            }
+ 
+            window.addEventListener('resize', function() {
+                initSlider();
+            });
+ 
+            beforeImg.addEventListener('load', initComponent);
+            afterImg.addEventListener('load', initComponent);
+            if (beforeImg.complete && afterImg.complete) {
+                initComponent();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -56,9 +56,6 @@ class ModelParams(ParamGroup):
         self.train_test_exp = False
         self.data_device = "cuda"
         self.eval = False
-        #modify
-        self.load2gpu_on_the_fly = False
-        self.is_blender = False
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):
@@ -82,10 +79,8 @@ class OptimizationParams(ParamGroup):
         self.position_lr_delay_mult = 0.01
         self.position_lr_max_steps = 30_000
         self.feature_lr = 0.0025
-        # self.opacity_lr = 0.025
-        # self.scaling_lr = 0.005
-        self.opacity_lr = 0.05
-        self.scaling_lr = 0.001
+        self.opacity_lr = 0.025
+        self.scaling_lr = 0.005
         self.rotation_lr = 0.001
         self.exposure_lr_init = 0.01
         self.exposure_lr_final = 0.001
@@ -102,8 +97,6 @@ class OptimizationParams(ParamGroup):
         self.depth_l1_weight_final = 0.01
         self.random_background = False
         self.optimizer_type = "default"
-        self.warm_up = 0
-        self.ATF_lr_max_steps = 30_000
         super().__init__(parser, "Optimization Parameters")
 
 def get_combined_args(parser : ArgumentParser):

@@ -20,7 +20,7 @@ try:
     from scene import Scene
     from gaussian_renderer import render, GaussianModel  # 新增导入GaussianModel
     from argparse import Namespace
-    from scene.cameras import Camera as GSCamera
+    from scene.cameras_back import Camera as GSCamera
     from utils.graphics_utils import focal2fov
 except ImportError as e:
     print(f"Import error: {e}")

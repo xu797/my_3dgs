@@ -31,3 +31,9 @@ TI-NSD
 python train.py -s data/TI-NSD/apples -m output/ti-nsd/apples --eval
 python render.py -m output/ti-nsd/apples -s data/TI-NSD/apples --skip_train
 python metrics.py -m output/ti-nsd/apples
+
+
+
+
+
+
